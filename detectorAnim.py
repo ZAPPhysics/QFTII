@@ -39,17 +39,24 @@ def Lsq(A): return Ldot(A, A) # Lorentz vector magnitude
 def lammom(m1, m2, m3): # lambda function as defined in PDF
     return 1/2/m1*np.sqrt((m1**2 - (m2 + m3)**2)*(m1**2 - (m2 - m3)**2))
 
+def BWprop(p2, m, Gam): # Propagator for Breit-Wigner resonance
+    return 1/(p2 - m**2 + 1j*m*Gam)
+
 class detector: # Class for building detector simulation
 
-    def __init__(self, p, psi, mphi = 0.1, mth = 1, sigb = 0.1, n = 10, lam = 0.1):
+    def __init__(self, p, psi, mphi = 0.1, mth = 1.0, sigb = 0.1, n = 10, lam = 0.1,
+                gth = 0.0, gph = 0.0, mps = 2.0):
 
         self.p0ex = p      # Initial-state beam momentum
         self.psi = psi     # Relative beam angle
         self.mph = mphi    # Mass of phi particle
         self.mth = mth     # Mass of theta particle
+        self.mps = mps     # Mass of psi particle
         self.sigb = sigb   # Beam width
         self.n = n         # Beam number density
         self.lam = lam     # phi^2*theta^2 quadratic coupling constant
+        self.gth = gth     # theta^2*psi coupling constant
+        self.gph = gph     # phi^2*psi coupling constant
 
         self.p0com = p*np.cos(self.psi/2) # Center of mass momentum
         self.E0ex = np.sqrt(p**2 + mphi**2) # Energy in lab frame
@@ -62,28 +69,88 @@ class detector: # Class for building detector simulation
         self.p1 = np.array([self.E0com, self.p0com, 0]) 
         self.p2 = np.array([self.E0com, - self.p0com, 0])
 
-    def Mphi2toth2(self, t, u): # phi^2 -> theta^2 matrix element to O(lambda^2)
+        # psi decay width to LO in perturbation theory (must conserve energy)
+
+        if self.mps > 2*self.mph and self.mps > 2*mth:
+            self.Gamps = 1/16/self.mps**2*(self.gth**2 + self.gph**2)
+        elif self.mps > 2*self.mph:
+            self.Gamps = 1/16/self.mps**2*(self.gph**2)
+        elif self.mps > 2*mth:
+            self.Gamps = 1/16/self.mps**2*(self.gth**2)
+        else:
+            self.Gamps = 0.0
+
+    def Mphi2toth2(self, s, t, u): # phi^2 -> theta^2 matrix element to O(lambda^2)
+
+        #return 0. #Uncomment to switch off interaction
 
         M0 = - 1j*self.lam
         M1 = 1j*self.lam**2/8/np.pi*(L(t, self.mph, self.mth) + L(u, self.mph, self.mth))
+        Mres = - 1j*self.gph*self.gth*BWprop(s, self.mps, self.Gamps) #Resonant psi contribution
 
-        return M0 + M1
+        return M0 + M1 + Mres
 
     def Mphi2tophi2(self, s, t, u): # phi^2 -> phi^2 matrix element to O(lambda^2)
 
-        return 1j*self.lam**2/8/np.pi*(L(s, self.mth, self.mth) + L(t, self.mth, self.mth) + L(u, self.mth, self.mth))
+        #return 0. #Uncomment to switch off interaction
 
-    def Mphi2toth4(self, t1, t2, t3, u1, u2, u3): # phi^2 -> theta^4 matrix element to O(lambda^2)
+        M1 = 1j*self.lam**2/8/np.pi*(L(s, self.mth, self.mth) + L(t, self.mth, self.mth) + L(u, self.mth, self.mth))
+        Mres = - 1j*self.gph**2*(BWprop(s, self.mps, self.Gamps) #Resonant psi contribution
+                    + BWprop(t, self.mps, self.Gamps) + BWprop(u, self.mps, self.Gamps))
+
+        return M1 + Mres
+
+    def Mphi2toth4(self, s1, s2, s3, s4, t1, t2, t3, u1, u2, u3,
+                r12, r13, r14, r23, r24, r34): # phi^2 -> theta^4 matrix element to O(lambda^2)
+
+        #return 0. #Uncomment to switch off interaction
 
         Dph = lambda x: 1/(x - self.mph**2)
-
-        return - 1j*self.lam**2*(Dph(t1) + Dph(t2) + Dph(t3) + Dph(u1) + Dph(u2) + Dph(u3))
-
-    def Mphi2toth2ph2(self, s1, s2, t1, t2, u1, u2): # phi^2 -> phi^2 theta^2 matrix element to O(lambda^2)
-
         Dth = lambda x: 1/(x - self.mth**2)
 
-        return - 1j*self.lam**2*(Dth(s1) + Dth(s2) + Dth(t1) + Dth(t2) + Dth(u1) + Dth(u2))
+        M0 = - 1j*self.lam**2*(Dph(t1) + Dph(t2) + Dph(t3) + Dph(u1) + Dph(u2) + Dph(u3))
+        Mres = - 1j*self.lam*( #Resonant psi contribution
+                BWprop(r12, self.mps, self.Gamps)*(
+                    self.gth**2*(Dth(s3) + Dth(s4)) + self.gph*self.gth*(Dph(t3) + Dph(u3)))
+                + BWprop(r13, self.mps, self.Gamps)*(
+                    self.gth**2*(Dth(s2) + Dth(s3)) + self.gph*self.gth*(Dph(t1) + Dph(u2)))
+                + BWprop(r14, self.mps, self.Gamps)*(
+                    self.gth**2*(Dth(s2) + Dth(s4)) + self.gph*self.gth*(Dph(t2) + Dph(u1)))
+                + BWprop(r23, self.mps, self.Gamps)*(
+                    self.gth**2*(Dth(s1) + Dth(s3)) + self.gph*self.gth*(Dph(t2) + Dph(u1)))
+                + BWprop(r24, self.mps, self.Gamps)*(
+                    self.gth**2*(Dth(s1) + Dth(s4)) + self.gph*self.gth*(Dph(t1) + Dph(u2)))
+                + BWprop(r34, self.mps, self.Gamps)*(
+                    self.gth**2*(Dth(s1) + Dth(s2)) + self.gph*self.gth*(Dph(t3) + Dph(u3)))
+                )
+
+        return M0 + Mres
+
+    def Mphi2toth2ph2(self, s, s1, s2, s3, s4, t1, t2, t3, u1, u2, u3,
+                r12, d11, d12, d21, d22): # phi^2 -> phi^2 theta^2 matrix element to O(lambda^2)
+
+        #return 0. #Uncomment to switch off interaction
+
+        Dph = lambda x: 1/(x - self.mph**2)
+        Dth = lambda x: 1/(x - self.mth**2)
+
+        M0 = - 1j*self.lam**2*(Dth(s1) + Dth(s2) + Dth(t1) + Dth(t2) + Dth(u1) + Dth(u2))
+        Mres = - 1j*self.lam*( #Resonant psi contribution
+                BWprop(s, self.mps, self.Gamps)*(
+                    self.gph**2*(Dph(s1) + Dph(s2)) + self.gph*self.gth*(Dth(s3) + Dth(s4)))
+                + BWprop(r12, self.mps, self.Gamps)*(
+                    self.gph**2*(Dph(t3) + Dph(u3)) + self.gph*self.gth*(Dth(s3) + Dth(s4)))
+                + BWprop(d11, self.mps, self.Gamps)*(
+                    self.gph**2*(Dph(s1) + Dph(t3)) + self.gph*self.gth*(Dth(t1) + Dth(t2)))
+                + BWprop(d12, self.mps, self.Gamps)*(
+                    self.gph**2*(Dph(s2) + Dph(t3)) + self.gph*self.gth*(Dth(u1) + Dth(u2)))
+                + BWprop(d21, self.mps, self.Gamps)*(
+                    self.gph**2*(Dph(s1) + Dph(u3)) + self.gph*self.gth*(Dth(u1) + Dth(u2)))
+                + BWprop(d22, self.mps, self.Gamps)*(
+                    self.gph**2*(Dph(s2) + Dph(u3)) + self.gph*self.gth*(Dth(t1) + Dth(t2)))
+                )
+
+        return M0 + Mres
 
     def dsigphi2toth2(self, xi): # phi^2 -> theta^2 differential cross-section
 
@@ -91,17 +158,16 @@ class detector: # Class for building detector simulation
         u = - 2*self.p0com**2*(1 + np.cos(xi))
 
         if self.E0com >= self.mth:
-            return np.abs(self.Mphi2toth2(t, u))**2/256/np.pi/self.p0com/self.E0com
+            return np.abs(self.Mphi2toth2(self.s, t, u))**2/256/np.pi/self.p0com/self.E0com
 
         else: return 0
 
     def dsigphi2tophi2(self, xi): # phi^2 -> phi^2 differential cross-section
 
-        s = 4*self.E0com
         t = - 2*self.p0com**2*(1 - np.cos(xi))
         u = - 2*self.p0com**2*(1 + np.cos(xi))
 
-        return np.abs(self.Mphi2tophi2(s, t, u))**2/256/np.pi/self.p0com/self.E0com
+        return np.abs(self.Mphi2tophi2(self.s, t, u))**2/256/np.pi/self.p0com/self.E0com
 
     def dsigphi2toth4(self, x): # phi^2 -> theta^4 differential cross-section
 
@@ -137,15 +203,27 @@ class detector: # Class for building detector simulation
             q1 = np.matmul(Rmat, np.matmul(L12, q112))
             q2 = np.matmul(Rmat, np.matmul(L12, q212))
             q3 = np.matmul(Rmat, np.matmul(L34, q334))
+            q4 = self.p1 + self.p2 - q1 - q2 - q3
 
+            s1 = Lsq(self.p1 + self.p2 - q1)
+            s2 = Lsq(self.p1 + self.p2 - q1)
+            s3 = Lsq(self.p1 + self.p2 - q4)
+            s4 = Lsq(self.p1 + self.p2 - q3)
             t1 = Lsq(self.p1 - q1 - q3)
             t2 = Lsq(self.p2 - q2 - q3)
             t3 = Lsq(self.p1 - q1 - q2)
             u1 = Lsq(self.p1 - q2 - q3)
             u2 = Lsq(self.p2 - q1 - q3)
             u3 = Lsq(self.p2 - q1 - q2)
+            r12 = Lsq(q1 + q2)
+            r13 = Lsq(q1 + q3)
+            r14 = Lsq(q1 + q4)
+            r23 = Lsq(q2 + q3)
+            r24 = Lsq(q2 + q4)
+            r34 = Lsq(q3 + q4)
 
-            return np.abs(self.Mphi2toth4(t1, t2, t3, u1, u2, u3))**2/48/self.p0com/self.E0com/(2*np.pi)**2/(8*np.pi)**3/np.sqrt(self.s*s12*s34)
+            return (np.abs(self.Mphi2toth4(s1, s2, s3, s4, t1, t2, t3, u1, u2, u3, r12, r13, r14, r23, r24, r34))**2
+                            /48/self.p0com/self.E0com/(2*np.pi)**2/(8*np.pi)**3/np.sqrt(self.s*s12*s34))
 
     def dsigphi2toth2ph2(self, x): # phi^2 -> phi^2 theta^2 differential cross-section
 
@@ -181,15 +259,26 @@ class detector: # Class for building detector simulation
             q1 = np.matmul(Rmat, np.matmul(L12, q112))
             q2 = np.matmul(Rmat, np.matmul(L12, q212))
             q3 = np.matmul(Rmat, np.matmul(L34, q334))
+            q4 = self.p1 + self.p2 - q1 - q2 - q3
 
             s1 = Lsq(self.p1 + self.p2 - q1)
             s2 = Lsq(self.p1 + self.p2 - q1)
+            s3 = Lsq(self.p1 + self.p2 - q4)
+            s4 = Lsq(self.p1 + self.p2 - q3)
             t1 = Lsq(self.p1 - q1 - q3)
             t2 = Lsq(self.p2 - q2 - q3)
+            t3 = Lsq(self.p1 - q1 - q2)
             u1 = Lsq(self.p1 - q2 - q3)
             u2 = Lsq(self.p2 - q1 - q3)
+            u3 = Lsq(self.p2 - q1 - q2)
+            r12 = Lsq(q1 + q2)
+            d11 = Lsq(self.p1 - q1)
+            d12 = Lsq(self.p1 - q2)
+            d21 = Lsq(self.p2 - q1)
+            d22 = Lsq(self.p2 - q2)
 
-            return np.abs(self.Mphi2toth2ph2(s1, s2, t1, t2, u1, u2))**2/8/self.p0com/self.E0com/(2*np.pi)**2/(8*np.pi)**3/np.sqrt(self.s*s12*s34)
+            return (np.abs(self.Mphi2toth2ph2(self.s, s1, s2, s3, s4, t1, t2, t3, u1, u2, u3, r12, d11, d12, d21, d22))**2
+                    /8/self.p0com/self.E0com/(2*np.pi)**2/(8*np.pi)**3/np.sqrt(self.s*s12*s34))
 
     def rates(self, select = []): # Calculates rates for all selected processes. Computes all four if none specified
 
@@ -270,8 +359,13 @@ class detector: # Class for building detector simulation
 
             return vals
 
-    def createAnimation(self, time, fps = 30, directory = r'./', filename = r'detector.gif'):
+    def createAnimation(self, time, fps = 30, directory = r'./', filename = r'detector.gif', track_subtract = False, theta_mask = False):
         # Generates animation for detector simulation for given experimental parameters
+
+        if theta_mask and not track_subtract: #Doesn't make sense to cut but not subtract tracks
+            print(' Warning: if theta region is cut, tracks are automatically subtracted')
+            print(' ')
+            track_subtract = True
 
         dt = 1/fps # Time-step
         t = np.arange(0, time, dt)
@@ -281,26 +375,51 @@ class detector: # Class for building detector simulation
         totalRate = np.array(self.rates())
         totRateS = 1.54e24*totalRate # Converts rate in GeV to 1/seconds
 
-        print(' Rates:                                   ')
-        print('   R(phi phi -> theta theta) = {:.2f} s^-1'.format(totRateS[1]))
-        print('   R(phi phi -> phi phi) = {:.2f} s^-1'.format(totRateS[0]))
-        print('   R(phi phi -> theta theta phi phi) = {:.2f} s^-1'.format(totRateS[3]))
-        print('   R(phi phi -> theta theta theta theta) = {:.2f} s^-1'.format(totRateS[2]))
+        if theta_mask:
 
-        if totRateS.sum()*dt > 1e3: # A warning message just in case. Otherwise can be VERY slow.
+            print(' Rates:                                   ')
+            print('   R(phi phi -> theta theta) = {:.2f} s^-1 (Zero seen due to cut)'.format(totRateS[1]))
+            print('   R(phi phi -> phi phi) = {:.2f} s^-1'.format(totRateS[0]))
+            print('   R(phi phi -> theta theta phi phi) = {:.2f} s^-1'.format(totRateS[3]))
+            print('   R(phi phi -> theta theta theta theta) = {:.2f} s^-1'.format(totRateS[2]))
 
-            userInput = input('\n Warning: this will generate ~{:.2f} events per frame.\n'\
-                    ' This will likely be VERY slow. Continue? (y or n): '.format(totRateS.sum()*dt))
+            if (totRateS.sum() - totRateS[1])*dt > 1e3: # A warning message just in case. Otherwise can be VERY slow.
 
-            while userInput != 'y':
-                if userInput == 'n':
-                    print('\n Tip: To reduce rates it is recommended to decrease beam width,\n'\
-                            ' decrease beam density, increase relative beam angle, or\n'
-                            ' increase beam momentum.')
-                    exit()
-                else: userInput = input(' Please input \'y\' to continue or \'n\' to exit: ')
+                userInput = input('\n Warning: this will generate ~{:.2f} events per frame.\n'\
+                        ' This will likely be VERY slow. Continue? (y or n): '.format(totRateS.sum()*dt))
 
-        print(' ')
+                while userInput != 'y':
+                    if userInput == 'n':
+                        print('\n Tip: To reduce rates it is recommended to decrease beam width,\n'\
+                                ' decrease beam density, increase relative beam angle, or\n'
+                                ' increase beam momentum.')
+                        exit()
+                    else: userInput = input(' Please input \'y\' to continue or \'n\' to exit: ')
+
+            print(' ')
+
+        else:
+
+            print(' Rates:                                   ')
+            print('   R(phi phi -> theta theta) = {:.2f} s^-1'.format(totRateS[1]))
+            print('   R(phi phi -> phi phi) = {:.2f} s^-1'.format(totRateS[0]))
+            print('   R(phi phi -> theta theta phi phi) = {:.2f} s^-1'.format(totRateS[3]))
+            print('   R(phi phi -> theta theta theta theta) = {:.2f} s^-1'.format(totRateS[2]))
+
+            if totRateS.sum()*dt > 1e3: # A warning message just in case. Otherwise can be VERY slow.
+
+                userInput = input('\n Warning: this will generate ~{:.2f} events per frame.\n'\
+                        ' This will likely be VERY slow. Continue? (y or n): '.format(totRateS.sum()*dt))
+
+                while userInput != 'y':
+                    if userInput == 'n':
+                        print('\n Tip: To reduce rates it is recommended to decrease beam width,\n'\
+                                ' decrease beam density, increase relative beam angle, or\n'
+                                ' increase beam momentum.')
+                        exit()
+                    else: userInput = input(' Please input \'y\' to continue or \'n\' to exit: ')
+
+            print(' ')
 
         #The following functions generate CDFs based on the corresponding differential cross sections:
 
@@ -493,6 +612,8 @@ class detector: # Class for building detector simulation
 
             else: return 0
 
+        maxMom = self.p0ex/0.8 # Normalizes the max penetration depth of each line so that everything stays in the detector.
+
         fig, ax = plt.subplots(figsize = (12, 12))
 
         # Static elements making up "detector"
@@ -508,6 +629,25 @@ class detector: # Class for building detector simulation
         inArrow2 = patch.Arrow(3.0, -0.175, - 0.45, 0.0, width = 0.1, color = 'r')
         outArrow1 = patch.Arrow(-2.55, 0.175, - 0.45, 0.0, width = 0.1, color = 'r')
         outArrow2 = patch.Arrow(2.55, 0.175, 0.45, 0.0, width = 0.1, color = 'r')
+        if theta_mask:
+            qLabMax = (self.E0ex/self.E0com * (
+                    np.sqrt(self.E0com**2 - self.mth**2)) 
+                    + self.p0ex*np.sin(self.psi/2))
+            qLabMin = (- self.E0ex/self.E0com * (
+                    np.sqrt(self.E0com**2 - self.mth**2)) 
+                    + self.p0ex*np.sin(self.psi/2))
+            qLabInt = np.sqrt(
+                    (self.p0ex*np.sin(self.psi/2))**2
+                    + (np.sqrt(self.E0com**2 - self.mth**2))**2)
+
+            rmax = 1.5 * np.abs(qLabMax) / maxMom + 1.0
+            rmin = 1.5 * np.abs(qLabMin) / maxMom + 1.0
+            rint = 1.5 * np.abs(qLabInt) / maxMom + 1.0
+
+            upperMask = patch.Annulus((0.0, 0.0), (rmax, rint), 0.15, angle = 90.0, color = 'k')
+            lowerMask = patch.Annulus((0.0, 0.0), (rint, rmin), 0.15, color = 'k')
+            clipUpperWedge = patch.Wedge(0.0, 2.5, 0.0, 180, alpha = 0.0)
+            clipLowerWedge = patch.Wedge(0.0, 2.5, 180.0, 0.0, alpha = 0.0)
 
         def drawDet(): # Draws the detector on the figure
 
@@ -519,6 +659,13 @@ class detector: # Class for building detector simulation
             ax.axis('off')
 
             ax.add_patch(cal)
+            if theta_mask:
+                ax.add_patch(clipUpperWedge)
+                ax.add_patch(clipLowerWedge)
+                mu = ax.add_patch(upperMask)
+                ml = ax.add_patch(lowerMask)
+                mu.set_clip_path(clipUpperWedge)
+                ml.set_clip_path(clipLowerWedge)
             ax.add_patch(whitespace1)
             ax.add_patch(whitespace2)
             ax.add_patch(blackBox)
@@ -530,8 +677,6 @@ class detector: # Class for building detector simulation
             ax.add_patch(inArrow2)
             ax.add_patch(outArrow1)
             ax.add_patch(outArrow2)
-
-        maxMom = self.p0ex/0.8 # Normalizes the max penetration depth of each line so that everything stays in the detector.
 
         lineCuts = 10 # Number of segments in a track
         lines = []
@@ -552,7 +697,10 @@ class detector: # Class for building detector simulation
                     lines[i].set_alpha(alphas[i])
                     i += 1
 
-            numInts = [getN(totRateS[i]*dt) for i in range(4)] # Number of each interactions per frame
+            if theta_mask: # Hide theta events (i.e. don't render them)
+                numInts = [getN(totRateS[i]*dt) if i != 1 else 0 for i in range(4)]
+            else:
+                numInts = [getN(totRateS[i]*dt) for i in range(4)] # Number of each interactions per frame
             qPhi = np.array([]) # Final-state phi momenta
             qTh = np.array([]) # Final-state theta momenta
             # The following generate all phi's and theta's given the number of each type of interaction per frame
@@ -592,11 +740,19 @@ class detector: # Class for building detector simulation
                     depth = 1.5*np.sqrt(q[0]**2 + q[1]**2)/maxMom + 1.0 # Penetration depth (determined by momentum: higher momentum, more penetration)
                     direct = [q[0]/np.sqrt(q[0]**2 + q[1]**2), q[1]/np.sqrt(q[0]**2 + q[1]**2)] # Track direction
 
-                    for i in range(lineCuts):
-                        lines.append(Line2D([(1.0 + (depth - 1.0)*i/lineCuts)*direct[0], ((1.0 + (depth - 1.0)*(i + 1)/lineCuts) - 0.001)*direct[0]],
-                            [(1.0 + (depth - 1.0)*i/lineCuts)*direct[1], ((1.0 + (depth - 1.0)*(i + 1)/lineCuts) - 0.001)*direct[1]], color = 'r',
-                            alpha = (0.1/(1.1 - (i + 1)/lineCuts))**1.5))
-                        alphas.append((0.1/(1.1 - (i + 1)/lineCuts))**1.5) # Line opacity determined by 1/p^1.5 relation (1.5 chosen for visualization)
+                    if track_subtract: # Remove the track from particle traveling through detector
+                        trackLength = min(0.1, - (depth - 1.0)*(lineCuts - 1)/lineCuts + (depth - 1.0))
+                        lines.append(Line2D([(depth - trackLength)*direct[0], (depth - 0.001)*direct[0]],
+                            [(depth - trackLength)*direct[1], (depth - 0.001)*direct[1]], color = 'r',
+                            alpha = 1.0)) # Adjust length of remaining track to be small if low energy transfer
+                        alphas.append(1.0)
+
+                    else:
+                        for i in range(lineCuts):
+                            lines.append(Line2D([(1.0 + (depth - 1.0)*i/lineCuts)*direct[0], ((1.0 + (depth - 1.0)*(i + 1)/lineCuts) - 0.001)*direct[0]],
+                                [(1.0 + (depth - 1.0)*i/lineCuts)*direct[1], ((1.0 + (depth - 1.0)*(i + 1)/lineCuts) - 0.001)*direct[1]], color = 'r',
+                                alpha = (0.1/(1.1 - (i + 1)/lineCuts))**1.5))
+                            alphas.append((0.1/(1.1 - (i + 1)/lineCuts))**1.5) # Line opacity determined by 1/p^1.5 relation (1.5 chosen for visualization)
 
             for q in qTh: # Adds track for each theta which enters the detector body
 
@@ -605,11 +761,19 @@ class detector: # Class for building detector simulation
                     depth = 1.5*np.sqrt(q[0]**2 + q[1]**2)/maxMom + 1.0 # Penetration depth (determined by momentum: higher momentum, more penetration)
                     direct = [q[0]/np.sqrt(q[0]**2 + q[1]**2), q[1]/np.sqrt(q[0]**2 + q[1]**2)] # Track direction
 
-                    for i in range(lineCuts):
-                        lines.append(Line2D([(1.0 + (depth - 1.0)*i/lineCuts)*direct[0], ((1.0 + (depth - 1.0)*(i + 1)/lineCuts) - 0.001)*direct[0]],
-                            [(1.0 + (depth - 1.0)*i/lineCuts)*direct[1], ((1.0 + (depth - 1.0)*(i + 1)/lineCuts) - 0.001)*direct[1]], color = 'b',
-                            alpha = (0.1/(1.1 - (i + 1)/lineCuts))**1.5))
-                        alphas.append((0.1/(1.1 - (i + 1)/lineCuts))**1.5) # Line opacity determined by 1/p^1.5 relation (1.5 chosen for visualization)
+                    if track_subtract: # Only includes last line segment
+                        trackLength = min(0.1, - (depth - 1.0)*(lineCuts - 1)/lineCuts + (depth - 1.0))
+                        lines.append(Line2D([(depth - trackLength)*direct[0], (depth - 0.001)*direct[0]],
+                            [(depth - trackLength)*direct[1], (depth - 0.001)*direct[1]], color = 'b',
+                            alpha = 1.0)) # Adjust length of remaining track to be small if low energy transfer
+                        alphas.append(1.0)
+
+                    else:
+                        for i in range(lineCuts):
+                            lines.append(Line2D([(1.0 + (depth - 1.0)*i/lineCuts)*direct[0], ((1.0 + (depth - 1.0)*(i + 1)/lineCuts) - 0.001)*direct[0]],
+                                [(1.0 + (depth - 1.0)*i/lineCuts)*direct[1], ((1.0 + (depth - 1.0)*(i + 1)/lineCuts) - 0.001)*direct[1]], color = 'b',
+                                alpha = (0.1/(1.1 - (i + 1)/lineCuts))**1.5))
+                            alphas.append((0.1/(1.1 - (i + 1)/lineCuts))**1.5) # Line opacity determined by 1/p^1.5 relation (1.5 chosen for visualization)
 
             for i in range(len(lines)): ax.add_line(lines[i])
 
@@ -633,10 +797,17 @@ if __name__ == '__main__':
     beamangle = np.pi/12
     m1 = 0.1 # GeV: phi mass
     m2 = 1.0 # GeV: theta mass
+    m3 = 5.0 # GeV: psi mass
     beamwidth = 1e13 # GeV^-1: corresponds to ~mm beam width
     beamdens = 1e-21 # GeV^2: corresponds to ~10^6 particles per cm^2 in beam
     coup = 0.1 # quadratic coupling between theta and phi
-    p = 2.1 # GeV: beam momentum
+    #p = 1.1
+    #p = 2.45
+    p = 2.52
+    g1 = 0.0 # trilinear theta^2*psi coupling
+    g2 = 0.0 # trilinear phi^2*psi coupling
 
-    test = detector(p, beamangle, mphi = m1, mth = m2, sigb = beamwidth, n = beamdens, lam = coup)
-    test.createAnimation(15)
+    test = detector(p, beamangle, mphi = m1, mth = m2, sigb = beamwidth, 
+                n = beamdens, lam = coup, gth = g1, gph = g2, mps = m3)
+    test.createAnimation(15, directory = r'comparisons/', filename = r'subtracted_tracks.gif', 
+            track_subtract = True, theta_mask = False)
