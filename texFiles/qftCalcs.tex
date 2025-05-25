@@ -8,6 +8,8 @@
 \usepackage{amssymb}
 \newcommand{\td}[1]{\tilde{#1}}
 
+\allowdisplaybreaks
+
 \setcounter{section}{-1}
 
 \numberwithin{equation}{subsection}
@@ -1455,6 +1457,16 @@ labratory variables
 \begin{equation}
 	\sigma_{\phi^2\to\theta^2} = \frac{\lambda_{\phi\theta}^2}{128|\mathbf{p}'|\sin\frac{\psi}{2}(|\mathbf{p}'|^2\cos^2\frac{\psi}{2} + m_\phi^2)}\,.
 \end{equation}
+%Finally, we recall that we can use the cross section to get a rate by multiplying it by the reaction flux, $\mathcal{F}_\alpha = u_\alpha/V$. In the experiment
+%frame, it is straightforward to verify that the relative velocity is
+%\begin{equation}
+%	u_\alpha = \frac{\sqrt{(p_1'\cdot p_2')^2 - m_\phi^2}}{E_0'{}^2} = \frac{|\mathbf{p}'|}{|\mathbf{p}'|^2 + m_\phi^2}
+%		\sqrt{(1 + \cos\psi)(|\mathbf{p}'|^2(1+\cos\psi) + 2m_\phi^2)}\,,
+%\end{equation}
+%and using the reaction volume that we already found, we find the total reaction rate
+%\begin{equation}\label{eq:ratelo}
+%	R_{\phi^2 \to \theta^2} = \frac{\lambda_{\phi\theta}^2(1+\cos\psi)}{32\sigma_b^2(|\mathbf{p}'|^2 + m_\phi^2)\sqrt{|\mathbf{p}'|^2\cos^2\frac{\psi}{2} + m_\phi^2}}\,.
+%\end{equation}
 We can notice some interesting things about this equation. First and foremost, if we make the spatial momentum too large, the cross-section begins to decrease.  
 This is actually a very necessary feature of a cross-section, and in fact, a scattering cross
 section that increases with momentum is a sign that the theory is incomplete. Remember that the cross section is related to the probability for an interaction to occur, so
@@ -1780,6 +1792,261 @@ since it leads to a huge mess of constant interactions. Instead, what is done at
 	\mathcal{L} = \frac{N^2 f}{A}\,,
 \end{equation}
 where $A$ is the cross-sectional area of the beam (in our case, this is just $\sigma_b$).
+
+\section{Unstable Particles and Resonances}
+
+The cases considered in the previous sections are certainly interesting, but the $\mathbb{Z}_2$ symmetry that we have imposed in the theory
+prevents an important physical phenomenon: particle decay. This is particularly important when trying to understand how real-world experiments study
+short-lived particles which decay before they reach the detector.
+
+To examine the consequences of unstable particles, consider we include an additional scalar into our theory, $\psi$, such that the (bare) Lagrangian is given
+by
+\begin{equation}
+    \mathcal{L}_{\psi} = \frac{1}{2}\Big(\partial_\mu\psi\partial^\mu \psi - m_\psi^2 \psi^2 - g_\phi \psi\phi^2 - g_\theta \psi \theta^2\Big)\,.
+\end{equation}
+This introduces three new (momentum-space) Feynman rules to our theory
+\begin{equation}
+  \text{$\psi$ Propagator}: \quad \frac{i}{p^2 - m_\psi^2 + i\epsilon}, \quad
+  \text{$\psi-\phi-\phi$ Vertex}: \quad -i g_\phi, \quad
+  \text{$\psi-\theta-\theta$ Vertex}: \quad -i g_\theta\,,
+\end{equation}
+where the momentum-space conserving delta functions are implied in the vertices.
+
+\subsection{$\psi$ Decay}
+
+Assuming that $m_\psi > 2m_\theta > 2m_\phi$, this now opens the possibility that $\psi$ can decay into two $\phi$ particles or two $\theta$ particles\footnote{
+it can also decay into other states, but these will be suppressed further by higher powers of $g_i$ or $\lambda_{\theta\phi}$}.
+Using the notation $\varphi_i \in \{\phi, \theta\}$, the matrix elements for such a decay are easy to find
+\begin{equation}
+ iM_{\psi \to \varphi_i\varphi_i} = - i g_i\,.
+\end{equation}
+We already computed the two-body phase space integrals in the case of scattering, which we can use (replacing $2E_0\to m_\psi$) along with Eq.~\eqref{eq:decayRate} to find
+\begin{equation}
+ \frac{d \Gamma_{\psi\to\varphi_i\varphi_i}}{d\xi} = \frac{1}{2}\frac{|M_{\psi\to\varphi_i\varphi_i}|^2}{16\pi m_\psi^2}\,,
+\end{equation}
+where, again, the factor of $1/2$ comes from the fact that we have two identical particles in the final state. Integrating over $\xi$ and summing the two
+leading contributions in perturbation theory, we find the total decay rate
+\begin{equation}\label{eq:psiDecay}
+  \Gamma_\psi = \frac{1}{\tau_\psi} \approx \frac{g_\phi^2 + g_\theta^2}{16 m_\psi^2}\,,
+\end{equation}
+where $\tau_\psi$ is the half-life of the particle, $\psi$. We can now change how long-lived these $\psi$ particles are by turning the knobs on $g_\phi$, $g_\theta$, and $m_\psi$.
+However, it is important to note that $m_\psi$ must always be greater than $2m_\theta$ and $2m_\phi$ for the decays to occur, otherwise we can never satisfy
+the energy-conserving delta functions in the definition of the decay width.
+
+\subsection{$\psi$ Two-Point Function}
+
+Now, let us consider the amputated (i.e. no external propagators) two-point function with $\psi \to \psi$. This matrix element occurs only at one loop, and obtains
+two contributions: one from $\phi$ and one from $\theta$, giving
+\begin{equation}
+ iM_{\psi\to\psi} = \sum_i \frac{(-ig_i)^2}{2}\int \frac{d^3k}{(2\pi)^3}\frac{i}{k^2 - m_i^2 + i\epsilon}\frac{i}{(k + p)^2 - m_i^2 + i\epsilon}\,,
+\end{equation}
+with $p^\mu$ the three-momentum of the external particle(s). Again, we end up with a symmetry factor, but
+this time it comes from un-cancelled factors of $1/2$ in the Feynman rules when we expand the path integral and
+perform the Gaussian integration. The integral is the same one we performed for $\phi \phi \to \phi\phi$ scattering, giving
+\begin{equation}\label{eq:psiTwo}
+ iM_{\psi\to\psi} = \sum_i\frac{ig_i^2}{16\pi}\frac{1}{\sqrt{p^2}}\log\Bigg(\frac{2 m_i + \sqrt{p^2}}{2 m_i - \sqrt{p^2}}\Bigg)\,,
+\end{equation}
+where it will be useful to note that
+\begin{equation}\label{eq:logProp}
+ \log x = \left\{
+	\begin{array}{cc}
+		\log x\,, \quad x > 0 \\
+		\log(-x) + i \pi\,, \quad x < 0
+	\end{array}\right.\,.
+\end{equation}
+Note that Eq.~\eqref{eq:psiTwo} is finite, so no renormalization is strictly necessary. However, if we want to work in the on-shell scheme,
+we should include a finite counterterm, which we will choose to only subtract off the real part of $M$--as we will see, the imaginary part
+actually contains physical information, and introducing an imaginary part to the mass can mess with the spectrum of the theory
+\begin{equation}
+ \delta Z_{m_\psi} = - \sum_i\frac{g_i^2}{16\pi m_\psi^3}\log\Bigg(\frac{m_\psi + 2 m_i}{m_\psi - 2m_i}\Bigg)\,,
+\end{equation}
+to the given order we care about in perturbation theory.
+
+\subsection{The Optical Theorem}
+
+We now wish to prove a very interesting property of the $S$-matrix in general. Consider the quantum operator, $S$, whose matrix elements are the $S$-matrix elements, i.e.
+\begin{equation}
+ \mel{\beta}{S}{\alpha} = \delta(\alpha - \beta) + (2\pi)^di\delta^{(d)}(p_\alpha - p_\beta)M_{\alpha\beta}\,.
+\end{equation}
+We can then split this operator into an ``identity'' piece and a transition piece, $S = 1 + iT$. In order to preserve the unitarity of the theory (we know
+quantum mechanics is a unitarity theory), we must require $S^\dag S = 1$. Then,
+\begin{equation}
+ (1 - i T^\dag)(1 + iT) = 1 + i(T - T^\dag) + T^\dag T = 1 \quad \Rightarrow \quad T^\dag T = -i(T - T^\dag)\,.
+\end{equation}
+We now insert both sides of the latter equation into a matrix element between $\alpha$ and $\beta$, and insert a complete set of intermediate states to find
+\begin{equation}\label{eq:opPartOne}
+ -i(2\pi)^d\delta^{(d)}(p_\alpha - p_\beta)\big(M_{\alpha\to\beta} - M^*_{\beta \to \alpha}\big)
+	= \sum_\gamma M^*_{\beta\to\gamma}M_{\alpha\to\gamma}(2\pi)^d\delta^{(d)}(p_\alpha - p_\gamma)(2\pi)^d\delta^{(d)}(p_\gamma - p_\beta)\,,
+\end{equation}
+where we used
+\begin{equation}
+ \mel{a}{O^\dag}{b} = \mel{b}{O}{a}^*\,.
+\end{equation}
+Now, the sum over states, $\gamma$, is entirely schematic. Really, we should sum over all sets of particles in the states as well as the particles'
+phase spaces. Denoting a particular set of particles $X_\gamma$, we have
+\begin{equation}\label{eq:opTheorem}
+ -i\big(M_{\alpha\to\beta} - M^*_{\beta \to \alpha}\big) = \sum_{X_\gamma}\int\Bigg(\prod_{n\in X_\gamma}\frac{d^{d-1} \mathbf{p}_n}{(2\pi)^{d-1} 2E_n}\Bigg)
+	M^*_{\beta\to X_\gamma} M_{\alpha\to X_\gamma}(2\pi)^d\delta^{(d)}\Bigg(p_\alpha - \sum_{n\in X_\gamma}p_n\Bigg)\,.
+\end{equation}
+Eq.~\eqref{eq:opTheorem} is known as the \textit{optical theorem}, and is particularly interesting in the case where $\alpha = \beta$:
+\begin{equation}\label{eq:specialopTheorem}
+ 2\text{Im}M_{\alpha\to\alpha} = \sum_{X_\gamma}\frac{1}{S_{X_\gamma}}\int\Bigg(\prod_{n\in X_\gamma}\frac{d^{d-1} \mathbf{p}_n}{(2\pi)^{d-1} 2E_n}\Bigg)
+	|M_{\alpha\to X_\gamma}|^2(2\pi)^d\delta^{(d)}\Bigg(p_\alpha - \sum_{n\in X_\gamma}p_n\Bigg)\,,
+\end{equation}
+where $S_{X_\gamma}$ is the symmetry factor associated to redundant phase-space of final-state $X_\gamma$.
+Note that the $d$-momentum conserving delta function restricts $\gamma$ to contain only states which are on-shell. Eq.~\eqref{eq:specialopTheorem} tells
+us that physical processes (i.e. total scattering rates and decay rates) can be computed by calculating loop-level $n\to n$-point functions at the
+matrix-element level. In other words, we can always exchange integrals over phase space for loop integrals in so-called inclusive processes.
+
+We can see an explicit example of the optical theorem using our $\psi$ particle. Using the fact that $E = \sqrt{p^2}$ in a particle's rest frame (we
+do not assume in this case that the $\psi$ particle is on-shell), we see that
+\begin{equation}
+ 2\text{Im}M_{\psi\to\psi}(p^2) = 2\sqrt{p^2}\Gamma_\psi(p^2)\,,
+\end{equation}
+where $\Gamma_\psi(p^2)$ indicates that the $\psi$ in the decay with is treated as off-shell. Using Eqs.~\eqref{eq:psiTwo} and~\eqref{eq:logProp}, we find
+\begin{equation}
+ \text{Im}M_{\psi\to\psi}(p^2) = \frac{g_\phi^2 + g_\theta^2}{16\sqrt{p^2}} + \dots\,,
+\end{equation}
+which is exactly $\sqrt{p^2}$ times the total decay rate in Eq.~\eqref{eq:psiDecay} with $m_\psi^2\to p^2$ (the ``$\dots$'' denote terms that
+are higher order in perturbation theory).
+
+\subsection{Resonances}
+
+At this point, one may be wondering how the interactions with this new particle may affect the scattering cross sections we calculated previously.
+This is straightforward enough to check: all we need to do is calculate the matrix elements of the previous processes to leading order in $g_\phi$ and $g_\theta$.
+
+\subsubsection{Two-to-two scattering}
+
+The leading correction to the matrix element from the $\psi$ to the $\phi\phi\to\theta\theta$ process only arises in the $s$-channel, giving
+\begin{equation}
+ iM^{g^2}_{\phi\phi\to\theta\theta} = -i\frac{g_\phi g_\theta}{s - m_\psi^2}\,.
+\end{equation}
+The contribution to $\phi\phi\to\phi\phi$ is slightly more complicated due to the fact that it contributes in all three channels, but
+is still relatively straightforward to calculate
+\begin{equation}
+ iM^{g^2}_{\phi\phi\to\phi\phi} = - i g_\phi^2\Bigg(\frac{1}{s - m_\psi^2} + \frac{1}{t - m_\psi^2} + \frac{1}{u - m_\psi^2}\Bigg)\,.
+\end{equation}
+
+\subsubsection{Two-to-four scattering}
+
+The tree-level contributions to the $\phi\phi\to \theta\theta\theta\theta$ and $\phi\phi\to\phi\phi\theta\theta$ processes are
+not in principle more challenging, but the calculation is much more tedious since both processes have 24 contributing Feynman
+diagrams.
+
+After evaluating all diagrams, we obtain the results
+\begin{align*}
+ i M^{g^2}_{\phi^2\to\theta^4} =& - i\lambda_{\theta\phi}\Bigg[\frac{1}{r_{12} - m_\psi^2}\Bigg(
+	\frac{g_\theta^2}{s_3 - m_\theta^2} + \frac{g_\theta^2}{s_4 - m_\theta^2}
+	+ \frac{g_\theta g_\phi}{t_3 - m_\phi^2} + \frac{g_\theta g_\phi}{u_3 - m_\phi^2}\Bigg)\\[0.5em]
+ & + \frac{1}{r_{13} - m_\psi^2}\Bigg(
+	\frac{g_\theta^2}{s_2 - m_\theta^2} + \frac{g_\theta^2}{s_3 - m_\theta^2}
+	+ \frac{g_\theta g_\phi}{t_1 - m_\phi^2} + \frac{g_\theta g_\phi}{u_2 - m_\phi^2}\Bigg)\\[0.5em]
+ & + \frac{1}{r_{14} - m_\psi^2}\Bigg(
+	\frac{g_\theta^2}{s_2 - m_\theta^2} + \frac{g_\theta^2}{s_4 - m_\theta^2}
+	+ \frac{g_\theta g_\phi}{t_2 - m_\phi^2} + \frac{g_\theta g_\phi}{u_1 - m_\phi^2}\Bigg)\\[0.5em]
+ & + \frac{1}{r_{23} - m_\psi^2}\Bigg(
+	\frac{g_\theta^2}{s_1 - m_\theta^2} + \frac{g_\theta^2}{s_3 - m_\theta^2}
+	+ \frac{g_\theta g_\phi}{t_2 - m_\phi^2} + \frac{g_\theta g_\phi}{u_1 - m_\phi^2}\Bigg)\\[0.5em]
+ & + \frac{1}{r_{24} - m_\psi^2}\Bigg(
+	\frac{g_\theta^2}{s_1 - m_\theta^2} + \frac{g_\theta^2}{s_4 - m_\theta^2}
+	+ \frac{g_\theta g_\phi}{t_1 - m_\phi^2} + \frac{g_\theta g_\phi}{u_2 - m_\phi^2}\Bigg)\\[0.5em]
+ & + \frac{1}{r_{34} - m_\psi^2}\Bigg(
+	\frac{g_\theta^2}{s_1 - m_\theta^2} + \frac{g_\theta^2}{s_2 - m_\theta^2}
+	+ \frac{g_\theta g_\phi}{t_3 - m_\phi^2} + \frac{g_\theta g_\phi}{u_3 - m_\phi^2}\Bigg)
+\Bigg]\,, \\[0.5em]
+ i M^{g^2}_{\phi^2\to 2\phi^2\theta^2} =& -i\lambda_{\theta\phi}\Bigg[
+  \frac{1}{s - m_\psi^2}\Bigg(
+	\frac{g_\phi^2}{s_1 - m_\phi^2} + \frac{g_\phi^2}{s_2 - m_\phi^2}
+	+ \frac{g_\theta g_\phi}{s_3 - m_\theta^2} + \frac{g_\theta g_\phi}{s_4 - m_\theta^2}\Bigg)
+	\\[0.5em]
+  &+ \frac{1}{r_{12} - m_\psi^2}\Bigg(
+	\frac{g_\phi^2}{t_3 - m_\phi^2} + \frac{g_\phi^2}{u_3 - m_\phi^2}
+	+ \frac{g_\theta g_\phi}{s_3 - m_\theta^2} + \frac{g_\theta g_\phi}{s_4 - m_\theta^2}\Bigg)
+	\\[0.5em]
+  &+ \frac{1}{d_{11} - m_\psi^2}\Bigg(
+	\frac{g_\phi^2}{s_1 - m_\phi^2} + \frac{g_\phi^2}{t_3 - m_\phi^2}
+	+ \frac{g_\theta g_\phi}{t_1 - m_\theta^2} + \frac{g_\theta g_\phi}{t_2 - m_\theta^2}\Bigg)
+	\\[0.5em]
+  &+ \frac{1}{d_{12} - m_\psi^2}\Bigg(
+	\frac{g_\phi^2}{s_2 - m_\phi^2} + \frac{g_\phi^2}{t_3 - m_\phi^2}
+	+ \frac{g_\theta g_\phi}{u_1 - m_\theta^2} + \frac{g_\theta g_\phi}{u_2 - m_\theta^2}\Bigg)
+	\\[0.5em]
+  &+ \frac{1}{d_{21} - m_\psi^2}\Bigg(
+	\frac{g_\phi^2}{s_1 - m_\phi^2} + \frac{g_\phi^2}{u_3 - m_\phi^2}
+	+ \frac{g_\theta g_\phi}{u_1 - m_\theta^2} + \frac{g_\theta g_\phi}{u_2 - m_\theta^2}\Bigg)
+	\\[0.5em]
+  &+ \frac{1}{d_{22} - m_\psi^2}\Bigg(
+	\frac{g_\phi^2}{s_2 - m_\phi^2} + \frac{g_\phi^2}{u_3 - m_\phi^2}
+	+ \frac{g_\theta g_\phi}{t_1 - m_\theta^2} + \frac{g_\theta g_\phi}{t_2 - m_\theta^2}\Bigg)
+	\Bigg]
+	\,,
+\end{align*}
+where, along with the previously-defined kinematic variables, we defined
+\begin{equation}\begin{split}
+ s_3 = (p_1 + p_2 - q_4)^2 = (q_1 + q_2 + q_3)^2\,, &\quad
+ s_4 = (p_1 + p_2 - q_3)^2 = (q_1 + q_2 + q_4)^2\,, \\[0.5em]
+ r_{ij} = (q_i + q_j)^2\,, &\quad d_{ij} = (p_i - q_j)^2 \,.
+\end{split}\end{equation}
+
+\subsubsection{More Divergences?}
+
+Now, the forms of the above matrix elements may be a bit distressing, as there are many poles where the expression
+diverges, all corresponding to the propagator of the internal $\psi$ particle\footnote{Although there are apparent
+poles corresponding to $\phi$ and $\theta$ propagators, these turn out to be unreachable kinematically.}. 
+Unlike the UV poles which appeared in our discussion on renormalization, these poles are associated with
+kinematics -- they correspond to specific choices of kinematical variables and cannot be absorbed into the definitions
+of parameters of the theory.
+
+However, whenever we have a divergence which appears in our theory, it typically means we are making some kind of mistake
+somewhere along the way in our calculation. In this particular case, the source is a bit obscure, but we can get a first idea
+from the fact that the problem arises from the $\psi$ propagator of the form
+\begin{equation}
+ \Pi_\psi^{(0)}(p^2) = \frac{i}{p^2 - m_\psi^2}\,.
+\end{equation}
+Clearly, this diverges when the $\psi$ goes on-shell, i.e. $p^2 = m_\psi^2$. However, this is the propagator for a free field,
+which is of course \textit{stable}. Here, we see the mistake we made: in our calculation, we used the propagator for a stable
+particle for $\psi$, but we are calculating the rate of scattering into only $\phi$'s and $\theta$'s. So, when we tune our intial
+state to produce a $\psi$ exactly on-shell, if it is stable, it will just continue being a $\psi$ instead of re-interacting to 
+produce the intended particles in our final state. In other words, at this exact kinematical point, we are actually calculating the
+wrong thing! Such a divergence in a physical process is known as a \textit{resonance}
+
+Of course, the assumption of stability of $\psi$ is a bad one since we know that it decays. To incorporate these results, we need
+to consider the corrections to the stable-particle propagator which arise from interactions. However, we already saw in the section
+on renormalization that the fully interacting two-point function is actually given by
+\begin{equation}
+ \Pi_\psi(p^2) = \frac{i}{p^2 - m_\psi^2 - i\Pi_\psi^{1\text{PI}}(p^2)}\,,
+\end{equation}
+where $\Pi_\psi^{1\text{PI}}(p^2)$ is the sum of one-particle-irreducible $\psi\to\psi$ diagrams. But this is going to be given
+exactly by $iM_{\psi\to\psi}$! Breaking this matrix element into real and imaginary parts as 
+$M_{\psi\to\psi} = M_{\psi\to\psi}^R + i M_{\psi\to\psi}^I$ and including the explicit momentum dependence, we have
+\begin{equation}
+ \Pi_\psi(p^2) = \frac{i}{p^2 - m_\psi^2 + M_{\psi\to\psi}^R(p^2) + i M_{\psi\to\psi}^I(p^2)}\,.
+\end{equation}
+As we saw previously, though, the imaginary part of this matrix element is given exactly in terms of
+the off-shell decay rate, $\Gamma_\psi(p^2)$, giving
+\begin{equation}
+ \Pi_\psi(p^2) = \frac{i}{p^2 - m_\psi^2 + M_{\psi\to\psi}^R(p^2) + i \sqrt{p^2}\Gamma_\psi(p^2)}\,.
+\end{equation}
+For our last trick, we will note that the 1PI diagrams arise at higher orders in perturbation theory, so
+if we are working in a weakly coupled theory, either $p^2$ or $m_\psi^2$ will dominate the denominator
+for most choices of $p^2$. This means that the majority of the contribution of the matrix element terms
+in the propagator will come from the region where $p^2 \approx m_\psi^2$. When $p^2=m_\psi^2$, the real
+part of the two-point function vanishes since we are working in the on-shell scheme and the off-shell
+decay rate reduces to the \textit{on-shell} or full decay rate, giving the corrected propagator
+\begin{equation}\label{eq:breitWig}
+ \Pi_\psi(p^2) \approx \frac{i}{p^2 - m_\psi^2 + i m_\psi\Gamma_\psi}\,.
+\end{equation}
+The parameterization of a resonance in Eq.~\eqref{eq:breitWig} is known as a \textit{Breit-Wigner resonance}.
+Notice that the additional term in the propagator has shifted the pole off of the real-$p^2$ axis 
+so that the two-point function no longer diverges when the $\psi$ particle goes on-shell.
+
+We can think of this more intuitivly in the following way: since the $\psi$ has some finite lifetime, $\tau_\psi$, we need at least
+a time resolution of $\Delta t = \tau_\psi$ in order to be able to say that the $\psi$ was actually produced in our reaction. Of
+course, if we have a finite resolution in time, we must also have a corresponding resolution in our energy, $\Delta E \ge 1/\tau_\psi$.
+This means that we must ``smear out'' the energies required to produce the real $\psi$ intermediate state by an amount
+$1/\tau_\psi = \Gamma_\psi$. So, while the central value of the energy needed to produce this state stays $m_\psi$, there is some
+induced width to the distribution of the energy due to this uncertainty. This distribution is exactly parameterized by Eq.~\eqref{eq:breitWig}.
+Furthermore, this is the reason that a total decay rate is often referred to as the \textit{decay width} of a particle.
 
 \appendix
 
