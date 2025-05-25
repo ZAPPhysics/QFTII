@@ -1,5 +1,5 @@
 # QFTII
-The code used and calculations performed for the video https://youtu.be/x3-Y6jL3yjQ
+The code used and calculations performed for the videos https://youtu.be/x3-Y6jL3yjQ and https://youtu.be/bhNCjWRnOB0 
 
 The following files are included in this repository:
 
